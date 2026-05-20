@@ -148,6 +148,62 @@ const FAQItem = ({ q, a }) => {
   );
 };
 
+// ── OTP Step — fully uncontrolled, no lag ────────────────────────────────────
+const OtpStep = ({ phone, fakeOtp, setUser, setShowAuth, setAuthStep, name }) => {
+  const refs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
+
+  const handleChange = (i, val) => {
+    const clean = val.replace(/\D/, "").slice(0, 1);
+    if (refs[i].current) refs[i].current.value = clean;
+    if (clean && i < 5) refs[i + 1].current?.focus();
+  };
+
+  const handleKeyDown = (i, e) => {
+    if (e.key === "Backspace" && !refs[i].current?.value && i > 0) {
+      refs[i - 1].current?.focus();
+    }
+  };
+
+  const handleVerify = () => {
+    const entered = refs.map(r => r.current?.value || "").join("");
+    if (entered === fakeOtp) {
+      setUser({ name: name || "User", phone });
+      setShowAuth(null);
+      setAuthStep(1);
+    } else {
+      alert("Incorrect OTP. Please try again.");
+      refs.forEach(r => { if (r.current) r.current.value = ""; });
+      refs[0].current?.focus();
+    }
+  };
+
+  return (
+    <>
+      <p style={{ color: "#888", fontSize: 14, marginBottom: 24 }}>OTP sent to +91 {phone}</p>
+      <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 28 }}>
+        {refs.map((ref, i) => (
+          <input
+            key={i}
+            ref={ref}
+            maxLength={1}
+            onChange={e => handleChange(i, e.target.value)}
+            onKeyDown={e => handleKeyDown(i, e)}
+            style={{ width: 44, height: 52, textAlign: "center", fontSize: 20, fontWeight: 700, background: "#2A2A2A", border: "1px solid #333", borderRadius: 12, color: "#FFF", outline: "none", transition: "border 0.2s" }}
+            onFocus={e => e.target.style.borderColor = "#FFCC00"}
+            onBlur={e => e.target.style.borderColor = "#333"}
+          />
+        ))}
+      </div>
+      <button className="btn-yellow" style={{ width: "100%", padding: "14px", fontSize: 15 }} onClick={handleVerify}>
+        Verify & Continue
+      </button>
+      <p style={{ textAlign: "center", marginTop: 12, color: "#555", fontSize: 13 }}>
+        <span style={{ color: "#FFCC00", cursor: "pointer" }} onClick={() => setAuthStep(1)}>← Change number</span>
+      </p>
+    </>
+  );
+};
+
 export default function Balliaride() {
   const [page, setPage] = useState("home");
   const [showAuth, setShowAuth] = useState(null);
@@ -335,28 +391,7 @@ export default function Balliaride() {
             </p>
           </>
         ) : (
-          <>
-            <p style={{ color: "#888", fontSize: 14, marginBottom: 24 }}>OTP sent to +91 {phone}</p>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 28 }}>
-              {otp.map((v, i) => (
-                <input key={i} id={`otp-${i}`} maxLength={1} value={v}
-                  onChange={e => {
-                    const val = e.target.value.replace(/\D/,"");
-                    const newOtp = [...otp];
-                    newOtp[i] = val;
-                    setOtp(newOtp);
-                    if (val && i < 5) document.getElementById(`otp-${i+1}`)?.focus();
-                  }}
-                  onKeyDown={e => { if (e.key === "Backspace" && !otp[i] && i > 0) document.getElementById(`otp-${i-1}`)?.focus(); }}
-                  style={{ width: 44, height: 52, textAlign: "center", fontSize: 20, fontWeight: 700, background: "#2A2A2A", border: "1px solid #333", borderRadius: 12, color: "#FFF", outline: "none" }}
-                />
-              ))}
-            </div>
-            <button className="btn-yellow" style={{ width: "100%", padding: "14px", fontSize: 15 }} onClick={handleVerifyOtp}>Verify & Continue</button>
-            <p style={{ textAlign: "center", marginTop: 12, color: "#555", fontSize: 13 }}>
-              <span style={{ color: "#FFCC00", cursor: "pointer" }} onClick={() => setAuthStep(1)}>← Change number</span>
-            </p>
-          </>
+          <OtpStep phone={phone} fakeOtp={fakeOtp} setUser={setUser} setShowAuth={setShowAuth} setAuthStep={setAuthStep} name={name} />
         )}
       </div>
     </div>
