@@ -167,9 +167,11 @@ export default function Balliaride() {
   const [driverOnline, setDriverOnline] = useState(true);
   const [payMethod, setPayMethod] = useState("Cash");
 
-  // Refs for uncontrolled hero inputs — fixes typing lag
+  // Refs for ALL uncontrolled inputs — fixes typing lag everywhere
   const heroPickupRef = useRef(null);
   const heroDropRef = useRef(null);
+  const authPhoneRef = useRef(null);
+  const authNameRef = useRef(null);
 
   const services = [
     { id: "bike", label: "Bike Taxi", fare: "₹15–40", eta: "2–4 min", icon: <BikeIllustration/>, desc: "Fastest way to beat traffic" },
@@ -199,7 +201,11 @@ export default function Balliaride() {
   ];
 
   const handleSendOtp = () => {
-    if (!phone || phone.length < 10) { alert("Please enter a valid 10-digit mobile number"); return; }
+    const p = authPhoneRef.current?.value?.trim() || "";
+    const n = authNameRef.current?.value?.trim() || "";
+    if (!p || p.length < 10) { alert("Please enter a valid 10-digit mobile number"); return; }
+    setPhone(p);
+    setName(n || "User");
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setFakeOtp(code);
     setAuthStep(2);
@@ -300,14 +306,24 @@ export default function Balliaride() {
             {showAuth === "signup" && (
               <div style={{ marginBottom: 16 }}>
                 <label style={{ fontSize: 13, color: "#888", marginBottom: 8, display: "block" }}>Full Name</label>
-                <input className="modal-input" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)}/>
+                <input
+                  ref={authNameRef}
+                  className="modal-input"
+                  placeholder="Enter your name"
+                />
               </div>
             )}
             <div style={{ marginBottom: 24 }}>
               <label style={{ fontSize: 13, color: "#888", marginBottom: 8, display: "block" }}>Mobile Number</label>
               <div style={{ display: "flex", gap: 8 }}>
                 <div style={{ background: "#2A2A2A", border: "1px solid #333", borderRadius: 12, padding: "12px 14px", color: "#888", fontSize: 15, minWidth: 60, display: "flex", alignItems: "center" }}>+91</div>
-                <input className="modal-input" placeholder="10-digit mobile" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/,"").slice(0,10))} maxLength={10} style={{ flex: 1 }}/>
+                <input
+                  ref={authPhoneRef}
+                  className="modal-input"
+                  placeholder="10-digit mobile"
+                  maxLength={10}
+                  style={{ flex: 1 }}
+                />
               </div>
             </div>
             <button className="btn-yellow" style={{ width: "100%", padding: "14px", fontSize: 15 }} onClick={handleSendOtp}>Send OTP →</button>
